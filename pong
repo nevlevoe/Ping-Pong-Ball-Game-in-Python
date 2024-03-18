@@ -1,0 +1,168 @@
+import pygame
+import random
+#initialization
+pygame.init()
+
+#declaration
+WIDTH=600
+HEIGHT=400
+PAD_WIDTH=8
+BALL_RADIUS=20
+paddle_1_pos=200
+paddle_2_pos=200
+pad_1_vel=0
+pad_2_vel=0
+ball_pos = [WIDTH / 2, HEIGHT / 2]
+ball_vel=[random.randrange(120, 240)/ 600, -random.randrange(60, 180)/ 600]
+score1=0
+score2=0
+
+
+#screen
+screen=pygame.display.set_mode((WIDTH,HEIGHT))
+
+#rgb colour codes
+Red=(255,0,0)
+Blue=(0,0,255)
+Black=(0,0,0)
+White = (255, 255, 255)
+
+#title 
+pygame.display.set_caption("pong")
+
+#spawn ball
+def spawn_ball(direction):
+    global ball_pos, ball_vel # these are vectors stored as lists
+    ball_pos = [WIDTH / 2, HEIGHT / 2]	
+    ball_vel=[random.randrange(120, 240) /600 , -random.randrange(60, 180) / 600]
+    if direction=="RIGHT":
+        ball_vel = [-random.randrange(120, 240) / 600, -random.randrange(60, 180) /600]
+    else:
+        ball_vel = [random.randrange(120, 240) / 600, -random.randrange(60, 180) / 600]
+def key_down():
+    global pad_1_vel, pad_2_vel
+    if event.type==pygame.KEYDOWN:
+            acc=0.7
+            if event.key == pygame.K_UP:
+                pad_2_vel-=acc
+            elif event.key == pygame.K_DOWN:
+                pad_2_vel+=acc
+            elif event.key == pygame.K_w:
+                pad_1_vel-=acc 
+            elif event.key == pygame.K_s:
+                pad_1_vel+=acc
+def key_up():
+    global pad_1_vel, pad_2_vel
+    if event.type==pygame.KEYUP:
+            if event.key == pygame.K_UP:
+                pad_2_vel=0
+            elif event.key == pygame.K_DOWN:
+                pad_2_vel=0
+            elif event.key == pygame.K_w:
+                pad_1_vel=0 
+            elif event.key == pygame.K_s:
+                pad_1_vel=0
+#game loop
+running=True
+while running:
+    screen.fill(Black)              #black screen
+    for event in pygame.event.get():
+        #Quit
+        if event.type==pygame.QUIT:
+            running=False
+        #checking when the key is pressed
+        key_down()
+        #checking when the key is released
+        key_up()
+    
+    #score1 incrementation printing
+    font1 = pygame.font.Font('serif.ttf', 40)
+    text1=font1.render(str(score1), True, Red , Black)
+    text1_Rect = text1.get_rect()
+    text1_Rect.center=(185, 40)
+    #score2 incrementation printing
+    font2 = pygame.font.Font('serif.ttf', 40)
+    text2=font2.render(str(score2), True, Blue , Black)
+    text2_Rect = text2.get_rect()
+    text2_Rect.center=(400, 40)
+
+    
+
+    paddle_2_pos+=pad_2_vel
+    paddle_1_pos+=pad_1_vel
+    
+    pygame.draw.line(screen, "white", [WIDTH/2,0],    [WIDTH/2,HEIGHT],width=1)           #Vertical line at half
+    pygame.draw.line(screen, "white", [PAD_WIDTH,0], [PAD_WIDTH,HEIGHT],width=1)          #Verical line at left
+    pygame.draw.line(screen, "white", [WIDTH-PAD_WIDTH,0], [WIDTH-PAD_WIDTH,HEIGHT],width=1)    #Vertical line at right
+    pygame.draw.line(screen, "red", [0,paddle_1_pos], [PAD_WIDTH,paddle_1_pos],width=80)            #Red paddle
+    pygame.draw.line(screen, "blue", [WIDTH-PAD_WIDTH,paddle_2_pos], [WIDTH,paddle_2_pos],width=80)       #Blue paddle
+    #changing ball position
+    ball_pos[0] += ball_vel[0]
+    ball_pos[1] += ball_vel[1] 
+    #bouncing the ball off the horizontal walls
+    if ball_pos[1] <= BALL_RADIUS:
+        ball_vel[1] = - ball_vel[1]
+    if ball_pos[1]>= HEIGHT-BALL_RADIUS:
+        ball_vel[1] = -ball_vel[1]
+    pygame.draw.circle(screen,"white",ball_pos,BALL_RADIUS) #drawing the ball
+    #checking wether the paddles meet the end positions
+    if (paddle_1_pos-40<=0 or paddle_1_pos+(40)>=HEIGHT):
+        pad_1_vel=0
+    if (paddle_2_pos-40<=0 or paddle_2_pos+(40)>=HEIGHT):
+        pad_2_vel=0
+    # determine whether paddle and ball collide  
+    if ((ball_pos[1]+BALL_RADIUS)- paddle_2_pos>= -40 and (ball_pos[1]+BALL_RADIUS)- paddle_2_pos<= 40 and ball_pos[0] >= (WIDTH - BALL_RADIUS - PAD_WIDTH)):
+        ball_vel[0] = - 1.1 * ball_vel[0]
+    elif(((ball_pos[1]+BALL_RADIUS)- paddle_2_pos< -40 or (ball_pos[1]+BALL_RADIUS)- paddle_2_pos> 40) and ball_pos[0] >= (WIDTH - BALL_RADIUS - PAD_WIDTH)):
+        score1+=1
+        spawn_ball("RIGHT")            
+    if ((ball_pos[1]-BALL_RADIUS)- paddle_1_pos>= -40 and (ball_pos[1]-BALL_RADIUS)- paddle_1_pos<= 40 and ball_pos[0] <= BALL_RADIUS + PAD_WIDTH):
+        ball_vel[0] = - 1.1 * ball_vel[0]
+    elif(((ball_pos[1]-BALL_RADIUS)- paddle_1_pos< -40 or (ball_pos[1]-BALL_RADIUS)- paddle_1_pos> 40)and ball_pos[0] <= BALL_RADIUS + PAD_WIDTH):
+        score2+=1
+        spawn_ball("LEFT")
+    screen.blit(text1 , text1_Rect)
+    screen.blit(text2 , text2_Rect)
+    
+    if score1>=5 or score2>=5 :
+        if score1>score2:
+            s="RED"
+            print(score1)
+            running=False
+        else:
+            s="BLUE"
+            print(score2)
+            running=False
+    pygame.display.update()
+
+#new loop to display which player won
+font1 = pygame.font.Font('serif.ttf', 40)
+text1=font1.render(str(score1), True, Red , Black)
+text1_Rect = text1.get_rect()
+text1_Rect.center=(185, 40)
+#score2 incrementation printing
+font2 = pygame.font.Font('serif.ttf', 40)
+text2=font2.render(str(score2), True, Blue , Black)
+text2_Rect = text2.get_rect()
+text2_Rect.center=(400, 40)
+screen.blit(text1, text1_Rect)
+screen.blit(text2, text2_Rect)
+pygame.display.update()
+font=pygame.font.Font('serif.ttf', 40)
+
+text=font.render("PLAYER "+s+" WON",True,White)
+textRect=text.get_rect()
+running_score=True
+textRect.center = (WIDTH // 2, HEIGHT // 2)
+while running_score:
+    screen.fill(Black)
+
+    screen.blit(text, textRect)
+    for event in pygame.event.get():
+        if event.type == pygame.QUIT:
+        # deactivates the pygame library
+            pygame.quit()
+        # quit the program.
+            quit()
+        # Draws the surface object to the screen.
+        pygame.display.update()
